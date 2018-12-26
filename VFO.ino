@@ -109,7 +109,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   //Serial.print("Loop");
   if(freqAChanged ) {
-     // updateClocks();
+      updateClocks();
       updateDisplay();
 
       freqAChanged = false;
