@@ -1,7 +1,6 @@
 
 #include "Default.h"
 #include <string.h>
-#include <Wire.h>
 
 /*! \file Implementation of the state machine 'default'
 */
@@ -668,7 +667,6 @@ void Default::enseq_main_region_main_r1_freq0bar_clk0_Highlighted_default()
 /* 'default' enter sequence for state Selected */
 void Default::enseq_main_region_main_r1_freq0bar_clk0_Selected_default()
 {
-
 	/* 'default' enter sequence for state Selected */
 	stateConfVector[0] = main_region_main_r1_freq0bar_clk0_Selected;
 	stateConfVectorPosition = 0;
@@ -885,13 +883,6 @@ void Default::exseq_main_region_initialize()
 	/* Default exit sequence for state initialize */
 	stateConfVector[0] = Default_last_state;
 	stateConfVectorPosition = 0;
-}
-
-/* Default exit sequence for state main */
-void Default::exseq_main_region_main()
-{
-	/* Default exit sequence for state main */
-	exseq_main_region_main_r1();
 }
 
 /* Default exit sequence for state menubar */
@@ -1468,15 +1459,7 @@ sc_boolean Default::main_region_main_react(const sc_boolean try_transition) {
 	sc_boolean did_transition = try_transition;
 	if (try_transition)
 	{ 
-		if (iface.eUpdateDisplay_raised)
-		{ 
-			exseq_main_region_main();
-			iface_OCB->updateDisplay();
-			enseq_main_region_main_default();
-		}  else
-		{
-			did_transition = false;
-		}
+		did_transition = false;
 	} 
 	if (((did_transition) == (false)))
 	{ 
@@ -1496,7 +1479,15 @@ sc_boolean Default::main_region_main_r1_menubar_react(const sc_boolean try_trans
 			main_region_main_react(false);
 		}  else
 		{
-			did_transition = false;
+			if (iface.eClockWiseTick_raised)
+			{ 
+				exseq_main_region_main_r1_menubar();
+				enseq_main_region_main_r1_freq0bar_default();
+				main_region_main_react(false);
+			}  else
+			{
+				did_transition = false;
+			}
 		}
 	} 
 	if (((did_transition) == (false)))
@@ -1636,7 +1627,7 @@ sc_boolean Default::main_region_main_r1_freq0bar_clk0_SetMultiplier_react(const 
 				if (iface.eCounterClockWiseTick_raised)
 				{ 
 					exseq_main_region_main_r1_freq0bar_clk0_SetMultiplier();
-					iface.clock0Multiplier = ((iface.clock0Multiplier) != (1000000)) ? iface.clock0Multiplier * 10 : iface.clock0Multiplier;
+					iface.clock0Multiplier = ((iface.clock0Multiplier) != (1000000000)) ? iface.clock0Multiplier * 10 : iface.clock0Multiplier;
 					enseq_main_region_main_r1_freq0bar_clk0_SetMultiplier_default();
 				}  else
 				{
@@ -1790,7 +1781,7 @@ sc_boolean Default::main_region_main_r1_freq1bar_clk1_SetMultiplier_react(const 
 				if (iface.eCounterClockWiseTick_raised)
 				{ 
 					exseq_main_region_main_r1_freq1bar_clk1_SetMultiplier();
-					iface.clock1Multiplier = ((iface.clock1Multiplier) != (1000000)) ? iface.clock1Multiplier * 10 : iface.clock1Multiplier;
+					iface.clock1Multiplier = ((iface.clock1Multiplier) != (1000000000)) ? iface.clock1Multiplier * 10 : iface.clock1Multiplier;
 					enseq_main_region_main_r1_freq1bar_clk1_SetMultiplier_default();
 				}  else
 				{
@@ -1944,7 +1935,7 @@ sc_boolean Default::main_region_main_r1_freq2bar_clk2_SetMultiplier_react(const 
 				if (iface.eCounterClockWiseTick_raised)
 				{ 
 					exseq_main_region_main_r1_freq2bar_clk2_SetMultiplier();
-					iface.clock2Multiplier = ((iface.clock2Multiplier) != (1000000)) ? iface.clock2Multiplier * 10 : iface.clock2Multiplier;
+					iface.clock2Multiplier = ((iface.clock2Multiplier) != (1000000000)) ? iface.clock2Multiplier * 10 : iface.clock2Multiplier;
 					enseq_main_region_main_r1_freq2bar_clk2_SetMultiplier_default();
 				}  else
 				{

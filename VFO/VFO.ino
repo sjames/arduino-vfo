@@ -88,8 +88,8 @@ void setup() {
 
   smVFO.enter(); /* Enter the state machine to activate it */
   smVFO.runCycle(); /* Chance to initialize */
-  smVFO.raise_eUpdateDisplay();
-  smVFO.runCycle(); /* Chance to initialize */
+//  smVFO.raise_eUpdateDisplay();
+//  smVFO.runCycle(); /* Chance to initialize */
 
   //draw();
 
@@ -165,8 +165,7 @@ void loop() {
   smVFO.runCycle();
 
   if(eventRaised) {
-	  smVFO.raise_eUpdateDisplay();
-	  smVFO.runCycle();
+	  updateDisplay();
 	  dbgPrintActiveStates();
 
   }
@@ -306,7 +305,28 @@ void dbgPrintActiveStates() {
 
 }
 
-void SMCallback::updateDisplay()
+void SMCallback::updateDisplay() {
+	::updateDisplay();
+}
+
+void drawAdjustPosition(char adjpos)
+{
+	u8g2.setCursor( 128 - 6*adjpos  , 14);
+	u8g2.print(F("_"));
+
+}
+
+void displayFreq(unsigned long f, char adjpos) {
+	char buf[12];
+	sprintf(buf,"%08lu.",f/100);
+	u8g2.print(buf);
+	sprintf(buf,"%02lu",f%100);
+	u8g2.print(buf);
+	drawAdjustPosition(adjpos);
+
+}
+
+void updateDisplay()
 {
 	Serial.println("Update display");
 	u8g2.firstPage();
@@ -316,56 +336,66 @@ void SMCallback::updateDisplay()
 		u8g2.print( F("VFO"));
 		u8g2.setCursor(0, CLK0_YPOS);
 		u8g2.print(F("0:"));
-		u8g2.print(smVFO.get_clock0Freq()/100);
-		u8g2.print(F("."));
-		u8g2.print(smVFO.get_clock0Freq()%100);
+
+		displayFreq(smVFO.get_clock0Freq(),smVFO.get_clock0Multiplier());
+
 		if(smVFO.isStateActive(Default::Generator_Running_CLK0_On)){
-			u8g2.print(F(" on"));
+			//u8g2.print(F(" on"));
+			u8g2.drawBox(118,20,8,8);
 		} else {
-			u8g2.print(F(" off"));
+			//u8g2.print(F(" off"));
 		}
 
 		u8g2.setCursor(0, CLK1_YPOS);
 		u8g2.print(F("1:"));
-		u8g2.print(smVFO.get_clock1Freq()/100);
-		u8g2.print(F("."));
-		u8g2.print(smVFO.get_clock1Freq()%100);
+
+		displayFreq(smVFO.get_clock1Freq(),smVFO.get_clock1Multiplier());
 		if(smVFO.isStateActive(Default::Generator_Running_CLK1_On)){
-			u8g2.print(F(" on"));
+			//u8g2.print(F(" on"));
+			u8g2.drawBox(118,36,8,8);
 		} else {
-			u8g2.print(F(" off"));
+			//u8g2.print(F(" off"));
 		}
 
 		u8g2.setCursor(0, CLK2_YPOS);
 		u8g2.print(F("2:"));
-		u8g2.print(smVFO.get_clock2Freq()/100);
-		u8g2.print(F("."));
-		u8g2.print(smVFO.get_clock2Freq()%100);
+		//u8g2.print(smVFO.get_clock2Freq()/100);
+		//u8g2.print(F("."));
+		//u8g2.print(smVFO.get_clock2Freq()%100);
+		displayFreq(smVFO.get_clock2Freq(),smVFO.get_clock2Multiplier());
 		if(smVFO.isStateActive(Default::Generator_Running_CLK2_On)){
-			u8g2.print(F(" on"));
+			u8g2.drawBox(118,52,8,8);
 		} else {
-			u8g2.print(F(" off"));
 		}
 
 		if(smVFO.isStateActive(Default::main_region_main_r1_freq0bar)) {
-			Serial.println("Freq0bar active");
+			//Serial.println("Freq0bar active");
 			u8g2.drawRFrame(0,CLK0_YPOS-ROW_SIZE+2, 128, 16,3);
 		}
 		if (smVFO.isStateActive(Default::main_region_main_r1_freq1bar)) {
-			Serial.println("Freq1bar active");
+			//Serial.println("Freq1bar active");
 			u8g2.drawRFrame(0,CLK1_YPOS-ROW_SIZE+2, 128, 16,3);
 		}
 		if (smVFO.isStateActive(Default::main_region_main_r1_freq2bar)) {
-			Serial.println("Freq2bar active");
+			//Serial.println("Freq2bar active");
 			u8g2.drawRFrame(0,CLK2_YPOS-ROW_SIZE+2, 128, 16,3);
 		}
 		if (smVFO.isStateActive(Default::main_region_main_r1_menubar)) {
-			Serial.println("menubar active");
+			//Serial.println("menubar active");
 			u8g2.drawRFrame(0, 0, 128, 16,3);
 		}
 
-	  } while ( u8g2.nextPage() );
+		if(smVFO.isStateActive(Default::main_region_main_r1_freq0bar_clk0_Selected)  ||
+				smVFO.isStateActive(Default::main_region_main_r1_freq1bar_clk1_Selected) ||
+				smVFO.isStateActive(Default::main_region_main_r1_freq2bar_clk2_Selected)
+				) {
+					u8g2.setCursor(100, 13);
+					u8g2.print( F("<>"));
+		}
 
+
+
+	  } while ( u8g2.nextPage() );
 
 }
 void SMCallback::enableClock(const sc_integer id)

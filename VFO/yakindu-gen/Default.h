@@ -399,7 +399,6 @@ class Default : public StatemachineInterface
 		void enseq_Generator_Running_CLK1_default();
 		void enseq_Generator_Running_CLK2_default();
 		void exseq_main_region_initialize();
-		void exseq_main_region_main();
 		void exseq_main_region_main_r1_menubar();
 		void exseq_main_region_main_r1_freq0bar();
 		void exseq_main_region_main_r1_freq0bar_clk0_Highlighted();
