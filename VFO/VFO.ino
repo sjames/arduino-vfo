@@ -4,7 +4,7 @@
  * https://github.com/brianlow/Rotary
  *  Si5351 https://github.com/etherkit/Si5351Arduino
  *  https://github.com/olikraus/u8g2
- *  Author: Sojan James <sojan.james@gmail.com>
+ *  Author: Sojan James <sojan dot james ampersand gmail dot com>
  *
  *  State machine built using Yakindu SCT https://www.itemis.com/en/yakindu/state-machine/
  *
@@ -62,7 +62,6 @@
 #endif
 
 U8G2_SSD1306_128X64_NONAME_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 10, /* data=*/ 9, /* cs=*/ 12, /* dc=*/ 11, /* reset=*/ 13);
-
 
 /* Rotary */
 Rotary r = Rotary(2,3);
