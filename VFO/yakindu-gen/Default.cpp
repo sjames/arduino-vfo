@@ -84,11 +84,6 @@ void Default::runCycle()
 			main_region_initialize_react(true);
 			break;
 		}
-		case main_region_main_r1_menubar :
-		{
-			main_region_main_r1_menubar_react(true);
-			break;
-		}
 		case main_region_main_r1_freq0bar_clk0_Highlighted :
 		{
 			main_region_main_r1_freq0bar_clk0_Highlighted_react(true);
@@ -206,9 +201,6 @@ sc_boolean Default::isStateActive(DefaultStates state) const
 		case main_region_main : 
 			return (sc_boolean) (stateConfVector[SCVI_MAIN_REGION_MAIN] >= main_region_main
 				&& stateConfVector[SCVI_MAIN_REGION_MAIN] <= main_region_main_r1_freq2bar_clk2_SetMultiplier);
-		case main_region_main_r1_menubar : 
-			return (sc_boolean) (stateConfVector[SCVI_MAIN_REGION_MAIN_R1_MENUBAR] == main_region_main_r1_menubar
-			);
 		case main_region_main_r1_freq0bar : 
 			return (sc_boolean) (stateConfVector[SCVI_MAIN_REGION_MAIN_R1_FREQ0BAR] >= main_region_main_r1_freq0bar
 				&& stateConfVector[SCVI_MAIN_REGION_MAIN_R1_FREQ0BAR] <= main_region_main_r1_freq0bar_clk0_SetMultiplier);
@@ -585,6 +577,7 @@ void Default::enact_Generator_Running_CLK0_Off()
 {
 	/* Entry action for state 'Off'. */
 	iface_OCB->disableClock(0);
+	iface_OCB->updateClock(0);
 }
 
 /* Entry action for state 'On'. */
@@ -600,6 +593,7 @@ void Default::enact_Generator_Running_CLK1_Off()
 {
 	/* Entry action for state 'Off'. */
 	iface_OCB->disableClock(1);
+	iface_OCB->updateClock(1);
 }
 
 /* Entry action for state 'On'. */
@@ -615,6 +609,7 @@ void Default::enact_Generator_Running_CLK2_Off()
 {
 	/* Entry action for state 'Off'. */
 	iface_OCB->disableClock(2);
+	iface_OCB->updateClock(2);
 }
 
 /* Entry action for state 'On'. */
@@ -639,14 +634,6 @@ void Default::enseq_main_region_main_default()
 {
 	/* 'default' enter sequence for state main */
 	enseq_main_region_main_r1_default();
-}
-
-/* 'default' enter sequence for state menubar */
-void Default::enseq_main_region_main_r1_menubar_default()
-{
-	/* 'default' enter sequence for state menubar */
-	stateConfVector[0] = main_region_main_r1_menubar;
-	stateConfVectorPosition = 0;
 }
 
 /* 'default' enter sequence for state freq0bar */
@@ -885,14 +872,6 @@ void Default::exseq_main_region_initialize()
 	stateConfVectorPosition = 0;
 }
 
-/* Default exit sequence for state menubar */
-void Default::exseq_main_region_main_r1_menubar()
-{
-	/* Default exit sequence for state menubar */
-	stateConfVector[0] = Default_last_state;
-	stateConfVectorPosition = 0;
-}
-
 /* Default exit sequence for state freq0bar */
 void Default::exseq_main_region_main_r1_freq0bar()
 {
@@ -1054,11 +1033,6 @@ void Default::exseq_main_region()
 			exseq_main_region_initialize();
 			break;
 		}
-		case main_region_main_r1_menubar :
-		{
-			exseq_main_region_main_r1_menubar();
-			break;
-		}
 		case main_region_main_r1_freq0bar_clk0_Highlighted :
 		{
 			exseq_main_region_main_r1_freq0bar_clk0_Highlighted();
@@ -1115,11 +1089,6 @@ void Default::exseq_main_region_main_r1()
 	/* Handle exit of all possible states (of default.main_region.main.r1) at position 0... */
 	switch(stateConfVector[ 0 ])
 	{
-		case main_region_main_r1_menubar :
-		{
-			exseq_main_region_main_r1_menubar();
-			break;
-		}
 		case main_region_main_r1_freq0bar_clk0_Highlighted :
 		{
 			exseq_main_region_main_r1_freq0bar_clk0_Highlighted();
@@ -1467,52 +1436,22 @@ sc_boolean Default::main_region_main_react(const sc_boolean try_transition) {
 	return did_transition;
 }
 
-sc_boolean Default::main_region_main_r1_menubar_react(const sc_boolean try_transition) {
-	/* The reactions of state menubar. */
-	sc_boolean did_transition = try_transition;
-	if (try_transition)
-	{ 
-		if (iface.eCounterClockWiseTick_raised)
-		{ 
-			exseq_main_region_main_r1_menubar();
-			enseq_main_region_main_r1_freq2bar_default();
-			main_region_main_react(false);
-		}  else
-		{
-			if (iface.eClockWiseTick_raised)
-			{ 
-				exseq_main_region_main_r1_menubar();
-				enseq_main_region_main_r1_freq0bar_default();
-				main_region_main_react(false);
-			}  else
-			{
-				did_transition = false;
-			}
-		}
-	} 
-	if (((did_transition) == (false)))
-	{ 
-		did_transition = main_region_main_react(try_transition);
-	} 
-	return did_transition;
-}
-
 sc_boolean Default::main_region_main_r1_freq0bar_react(const sc_boolean try_transition) {
 	/* The reactions of state freq0bar. */
 	sc_boolean did_transition = try_transition;
 	if (try_transition)
 	{ 
-		if (iface.eCounterClockWiseTick_raised)
+		if (iface.eClockWiseTick_raised)
 		{ 
 			exseq_main_region_main_r1_freq0bar();
-			enseq_main_region_main_r1_menubar_default();
+			enseq_main_region_main_r1_freq1bar_default();
 			main_region_main_react(false);
 		}  else
 		{
-			if (iface.eClockWiseTick_raised)
+			if (iface.eCounterClockWiseTick_raised)
 			{ 
 				exseq_main_region_main_r1_freq0bar();
-				enseq_main_region_main_r1_freq1bar_default();
+				enseq_main_region_main_r1_freq2bar_default();
 				main_region_main_react(false);
 			}  else
 			{
@@ -1813,7 +1752,7 @@ sc_boolean Default::main_region_main_r1_freq2bar_react(const sc_boolean try_tran
 		if (iface.eClockWiseTick_raised)
 		{ 
 			exseq_main_region_main_r1_freq2bar();
-			enseq_main_region_main_r1_menubar_default();
+			enseq_main_region_main_r1_freq0bar_default();
 			main_region_main_react(false);
 		}  else
 		{

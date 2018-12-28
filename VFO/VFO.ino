@@ -1,8 +1,8 @@
-/* Included libraries
+/* Using the following libraries
  *  https://github.com/brianlow/Rotary
  *  https://github.com/etherkit/Si5351Arduino
  *  Si5351 https://github.com/etherkit/Si5351Arduino
- *
+ *  https://github.com/olikraus/u8g2
  *  Author: Sojan James <sojan.james@gmail.com>
  */
 
@@ -11,9 +11,6 @@
 /* SSD1306 display connected over SPI */
 #include <SPI.h>
 #include <Wire.h>
-
-//#include <Adafruit_GFX.h>
-//#include <Adafruit_SSD1306.h>
 
 /* Si5351 https://github.com/etherkit/Si5351Arduino */
 #include "si5351.h"
@@ -68,7 +65,6 @@ void setup() {
   bool i2c_found = false;
   i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 0);
 
-   /* Initialise the sensor */
   if (!i2c_found)
   {
     /* There was a problem detecting the IC ... check your connections */
@@ -84,10 +80,14 @@ void setup() {
   smVFO.init(); /* Initialize it */
   smVFO.set_clock0ReqFreq(700000000);
   smVFO.set_clock1ReqFreq(1400000000);
-  smVFO.set_clock2ReqFreq(1400000000);
+  smVFO.set_clock2ReqFreq(350000000);
+  smVFO.set_clock0Multiplier(100);
+  smVFO.set_clock1Multiplier(100);
+  smVFO.set_clock2Multiplier(100);
 
   smVFO.enter(); /* Enter the state machine to activate it */
   smVFO.runCycle(); /* Chance to initialize */
+  updateDisplay();
 //  smVFO.raise_eUpdateDisplay();
 //  smVFO.runCycle(); /* Chance to initialize */
 
@@ -155,19 +155,17 @@ void loop() {
   if(ticks > 0) {
 	  smVFO.raise_eClockWiseTick(ticks);
 	  eventRaised = true;
-	  Serial.println("ClockWise");
+	 // Serial.println("ClockWise");
   } else if (ticks < 0) {
 	  smVFO.raise_eCounterClockWiseTick(-ticks);
 	  eventRaised = true;
-	  Serial.println("CCW");
+	 // Serial.println("CCW");
   }
 
   smVFO.runCycle();
 
   if(eventRaised) {
 	  updateDisplay();
-	  dbgPrintActiveStates();
-
   }
 
 }
@@ -224,12 +222,12 @@ ISR(PCINT2_vect) {
 
 void SMCallback::updateClock(const sc_integer id)
 {
-	Serial.print("Update clock:");
-	Serial.println(id);
+	//Serial.print("Update clock:");
+	//Serial.println(id);
 	if(id == 0) {
 		if(smVFO.get_clock0Freq() != smVFO.get_clock0ReqFreq() ) {
 			si5351.set_freq((unsigned long int)smVFO.get_clock0ReqFreq(), SI5351_CLK0);
-			Serial.println(smVFO.get_clock0ReqFreq());
+			//Serial.println(smVFO.get_clock0ReqFreq());
 			smVFO.set_clock0Freq(smVFO.get_clock0ReqFreq());
 
 		}
@@ -237,17 +235,18 @@ void SMCallback::updateClock(const sc_integer id)
 		if(smVFO.get_clock1Freq() != smVFO.get_clock1ReqFreq() ) {
 			si5351.set_freq((unsigned long int)smVFO.get_clock1ReqFreq(), SI5351_CLK1);
 			smVFO.set_clock1Freq(smVFO.get_clock1ReqFreq());
-			Serial.println(smVFO.get_clock1ReqFreq());
+			//Serial.println(smVFO.get_clock1ReqFreq());
 		}
 	} else if ( id == 2) {
 		if(smVFO.get_clock2Freq() != smVFO.get_clock2ReqFreq() ) {
 			si5351.set_freq((unsigned long int)smVFO.get_clock2ReqFreq(), SI5351_CLK2);
 			smVFO.set_clock2Freq(smVFO.get_clock2ReqFreq());
-			Serial.println(smVFO.get_clock2ReqFreq());
+			//Serial.println(smVFO.get_clock2ReqFreq());
 		}
 	}
 }
 
+/*
 void dbgPrintActiveStates() {
 	if(smVFO.isStateActive(Default::main_region_main_r1_freq0bar)){
 		Serial.println("freq0bar active");
@@ -261,9 +260,6 @@ void dbgPrintActiveStates() {
 			Serial.println("freq2bar active");
 		}
 
-	if(smVFO.isStateActive(Default::main_region_main_r1_menubar)){
-			Serial.println("menubar active");
-		}
 
 	if(smVFO.isStateActive(Default::main_region_main_r1_freq0bar_clk0_Highlighted)){
 			Serial.println("freq0bar_vforow_Highlighted active");
@@ -301,34 +297,69 @@ void dbgPrintActiveStates() {
 			Serial.println("freq2bar_vforow_SetMultiplier active");
 		}
 
-
-
 }
+*/
 
 void SMCallback::updateDisplay() {
 	::updateDisplay();
 }
 
-void drawAdjustPosition(char adjpos)
-{
-	u8g2.setCursor( 128 - 6*adjpos  , 14);
-	u8g2.print(F("_"));
 
+static unsigned char adjPosFromMultiplier(unsigned long multiplier)
+{
+	unsigned char pos = 0;
+	while(! (multiplier % 10)) {
+		pos++;
+		multiplier = multiplier / 10;
+	}
+	return pos;
 }
 
-void displayFreq(unsigned long f, char adjpos) {
+
+static void displayFreq(unsigned long f, unsigned long multiplier, bool showMultiplier) {
 	char buf[12];
-	sprintf(buf,"%08lu.",f/100);
-	u8g2.print(buf);
-	sprintf(buf,"%02lu",f%100);
-	u8g2.print(buf);
-	drawAdjustPosition(adjpos);
+	sprintf(buf,"%08lu.%02lu",f/100,f%100);
+
+	if(!showMultiplier) {
+		u8g2.print(buf);
+	} else {
+		unsigned char len = strlen(buf)-1;
+		unsigned char hilitepos= len - adjPosFromMultiplier(multiplier);
+		if(hilitepos<=8) {
+			hilitepos--;
+		}
+
+		len -= hilitepos-1;
+		u8g2.write((unsigned char*)buf,hilitepos);
+		u8g2.setDrawColor(0);
+		len -= 1;
+		u8g2.write((unsigned char*)buf+hilitepos,1);
+		u8g2.setDrawColor(1);
+		u8g2.write((unsigned char*)buf+hilitepos+1,len);
+	}
+
+	//drawAdjustPosition(adjPosFromMultiplier(multiplier));
 
 }
 
-void updateDisplay()
+static void updateDisplay()
 {
-	Serial.println("Update display");
+	//Serial.println("Update display");
+	bool showMultiplier = false;
+	bool showIncrDecr = false;
+	if(smVFO.isStateActive(Default::main_region_main_r1_freq0bar_clk0_SetMultiplier)  ||
+				smVFO.isStateActive(Default::main_region_main_r1_freq1bar_clk1_SetMultiplier) ||
+				smVFO.isStateActive(Default::main_region_main_r1_freq2bar_clk2_SetMultiplier)
+				) {
+					showMultiplier = true;
+				}
+
+	if(smVFO.isStateActive(Default::main_region_main_r1_freq0bar_clk0_Selected)  ||
+			smVFO.isStateActive(Default::main_region_main_r1_freq1bar_clk1_Selected) ||
+			smVFO.isStateActive(Default::main_region_main_r1_freq2bar_clk2_Selected)
+			) {
+				showIncrDecr = true;
+	}
 	u8g2.firstPage();
 	  do {
 		//u8g2.clear();
@@ -337,11 +368,11 @@ void updateDisplay()
 		u8g2.setCursor(0, CLK0_YPOS);
 		u8g2.print(F("0:"));
 
-		displayFreq(smVFO.get_clock0Freq(),smVFO.get_clock0Multiplier());
+		displayFreq(smVFO.get_clock0ReqFreq(),smVFO.get_clock0Multiplier(),showMultiplier);
 
 		if(smVFO.isStateActive(Default::Generator_Running_CLK0_On)){
 			//u8g2.print(F(" on"));
-			u8g2.drawBox(118,20,8,8);
+			u8g2.drawBox(120,20,6,6);
 		} else {
 			//u8g2.print(F(" off"));
 		}
@@ -349,10 +380,10 @@ void updateDisplay()
 		u8g2.setCursor(0, CLK1_YPOS);
 		u8g2.print(F("1:"));
 
-		displayFreq(smVFO.get_clock1Freq(),smVFO.get_clock1Multiplier());
+		displayFreq(smVFO.get_clock1ReqFreq(),smVFO.get_clock1Multiplier(),showMultiplier);
 		if(smVFO.isStateActive(Default::Generator_Running_CLK1_On)){
 			//u8g2.print(F(" on"));
-			u8g2.drawBox(118,36,8,8);
+			u8g2.drawBox(120,36,6,6);
 		} else {
 			//u8g2.print(F(" off"));
 		}
@@ -362,9 +393,9 @@ void updateDisplay()
 		//u8g2.print(smVFO.get_clock2Freq()/100);
 		//u8g2.print(F("."));
 		//u8g2.print(smVFO.get_clock2Freq()%100);
-		displayFreq(smVFO.get_clock2Freq(),smVFO.get_clock2Multiplier());
+		displayFreq(smVFO.get_clock2ReqFreq(),smVFO.get_clock2Multiplier(),showMultiplier);
 		if(smVFO.isStateActive(Default::Generator_Running_CLK2_On)){
-			u8g2.drawBox(118,52,8,8);
+			u8g2.drawBox(120,52,6,6);
 		} else {
 		}
 
@@ -380,28 +411,18 @@ void updateDisplay()
 			//Serial.println("Freq2bar active");
 			u8g2.drawRFrame(0,CLK2_YPOS-ROW_SIZE+2, 128, 16,3);
 		}
-		if (smVFO.isStateActive(Default::main_region_main_r1_menubar)) {
-			//Serial.println("menubar active");
-			u8g2.drawRFrame(0, 0, 128, 16,3);
+
+		if(showIncrDecr) {
+			u8g2.setCursor(110, 13);
+			u8g2.print( F("<>"));
 		}
-
-		if(smVFO.isStateActive(Default::main_region_main_r1_freq0bar_clk0_Selected)  ||
-				smVFO.isStateActive(Default::main_region_main_r1_freq1bar_clk1_Selected) ||
-				smVFO.isStateActive(Default::main_region_main_r1_freq2bar_clk2_Selected)
-				) {
-					u8g2.setCursor(100, 13);
-					u8g2.print( F("<>"));
-		}
-
-
-
 	  } while ( u8g2.nextPage() );
 
 }
 void SMCallback::enableClock(const sc_integer id)
 {
-	Serial.print("Enable Clock");
-	Serial.println(id);
+	//Serial.print("Enable Clock");
+	//Serial.println(id);
 	if(id == 0) {
 		si5351.output_enable(SI5351_CLK0, 1);
 	} else if (id == 1) {
@@ -412,8 +433,8 @@ void SMCallback::enableClock(const sc_integer id)
 }
 void SMCallback::disableClock(const sc_integer id)
 {
-	Serial.print("Disable Clock");
-	Serial.println(id);
+	//Serial.print("Disable Clock");
+	//Serial.println(id);
 	if(id == 0) {
 			si5351.output_enable(SI5351_CLK0, 0);
 		} else if (id == 1) {

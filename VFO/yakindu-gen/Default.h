@@ -14,7 +14,6 @@
 /*! Define indices of states in the StateConfVector */
 #define SCVI_MAIN_REGION_INITIALIZE 0
 #define SCVI_MAIN_REGION_MAIN 0
-#define SCVI_MAIN_REGION_MAIN_R1_MENUBAR 0
 #define SCVI_MAIN_REGION_MAIN_R1_FREQ0BAR 0
 #define SCVI_MAIN_REGION_MAIN_R1_FREQ0BAR_CLK0_HIGHLIGHTED 0
 #define SCVI_MAIN_REGION_MAIN_R1_FREQ0BAR_CLK0_SELECTED 0
@@ -49,7 +48,6 @@ class Default : public StatemachineInterface
 			Default_last_state,
 			main_region_initialize,
 			main_region_main,
-			main_region_main_r1_menubar,
 			main_region_main_r1_freq0bar,
 			main_region_main_r1_freq0bar_clk0_Highlighted,
 			main_region_main_r1_freq0bar_clk0_Selected,
@@ -72,7 +70,7 @@ class Default : public StatemachineInterface
 			Generator_Running_CLK2_On
 		} DefaultStates;
 		
-		static const sc_integer numStates = 23;
+		static const sc_integer numStates = 22;
 		
 		//! Inner class for default interface scope.
 		class DefaultSCI
@@ -368,7 +366,6 @@ class Default : public StatemachineInterface
 		void enact_Generator_Running_CLK2_On();
 		void enseq_main_region_initialize_default();
 		void enseq_main_region_main_default();
-		void enseq_main_region_main_r1_menubar_default();
 		void enseq_main_region_main_r1_freq0bar_default();
 		void enseq_main_region_main_r1_freq0bar_clk0_Highlighted_default();
 		void enseq_main_region_main_r1_freq0bar_clk0_Selected_default();
@@ -399,7 +396,6 @@ class Default : public StatemachineInterface
 		void enseq_Generator_Running_CLK1_default();
 		void enseq_Generator_Running_CLK2_default();
 		void exseq_main_region_initialize();
-		void exseq_main_region_main_r1_menubar();
 		void exseq_main_region_main_r1_freq0bar();
 		void exseq_main_region_main_r1_freq0bar_clk0_Highlighted();
 		void exseq_main_region_main_r1_freq0bar_clk0_Selected();
@@ -440,7 +436,6 @@ class Default : public StatemachineInterface
 		sc_boolean react(const sc_boolean try_transition);
 		sc_boolean main_region_initialize_react(const sc_boolean try_transition);
 		sc_boolean main_region_main_react(const sc_boolean try_transition);
-		sc_boolean main_region_main_r1_menubar_react(const sc_boolean try_transition);
 		sc_boolean main_region_main_r1_freq0bar_react(const sc_boolean try_transition);
 		sc_boolean main_region_main_r1_freq0bar_clk0_Highlighted_react(const sc_boolean try_transition);
 		sc_boolean main_region_main_r1_freq0bar_clk0_Selected_react(const sc_boolean try_transition);
